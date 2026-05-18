@@ -72,9 +72,9 @@ Once integrated, your application will automatically check for updates and displ
 
 ---
 
-## Support
-
-For support or inquiries, please contact the project maintainer.
+## 📢 Support & Updates
+Join our Telegram for more professional tools and updates:
+👉 [**Telegram: @Matric_F4il**](https://t.me/Matric_F4il)
 
 ---
 
