@@ -25,24 +25,22 @@ Follow these steps to successfully integrate the online update dialog into your 
 
 1.  **Decompile your APK** using a suitable tool such as MT Manager, NP Manager, or APKTool.
 2.  **Place `classes_.dex`:** Inject the `classes_.dex` file into your decompiled APK. If using MT Manager, add it as a new DEX file (e.g., `classes2.dex` or `classes3.dex`).
-3.  **Add Assets:**
-    *   Copy the two image files (with invisible names) into the `assets/` folder of your decompiled APK.
-    *   Create a new file with four invisible characters as its name (e.g., `ã…¤ã…¤ã…¤ã…¤`) inside the `assets/` folder. This file will store your encrypted Firebase URL.
+3.  **Add Assets (Images):** Copy the two image files (with invisible names) into the `assets/` folder of your decompiled APK.
 
-### Step 2: Firebase URL Encryption
+### Step 2: Firebase URL Encryption and Asset Placement
 
 1.  **Open `URL_Encrypter.html`** in a web browser.
 2.  **Enter your Firebase Realtime Database URL** into the provided input field.
-3.  The tool will automatically encrypt the URL and provide the encrypted content. Copy this **Encrypted Asset Content**.
-4.  **Paste the copied content** into the `assets/ã…¤ã…¤ã…¤ã…¤` file (the one with four invisible characters) created in Step 1.
+3.  Click the **"Encrypt and Download"** button. The tool will automatically encrypt the URL and download a file (with four invisible characters as its name, e.g., `ㅤㅤㅤㅤ`) to your default downloads folder.
+4.  **Copy this downloaded file** (e.g., `ㅤㅤㅤㅤ`) from your downloads folder and **paste it into the `assets/` folder** of your decompiled APK.
 
 ### Step 3: Firebase Admin Panel Configuration
 
 1.  **Open `Firebase_Admin_Panel.html`** in any text editor.
 2.  **Locate the JavaScript section** within the HTML file.
-3.  **Insert your Firebase Realtime Database URL** into the designated variable within the JavaScript code. This URL should be the *unencrypted* Firebase URL.
+3.  **Insert your Firebase Realtime Database URL** (the *unencrypted* URL) into the designated variable within the JavaScript code. This URL will be used by the admin panel to connect to your Firebase Realtime Database.
 4.  **Save** the `Firebase_Admin_Panel.html` file.
-5.  **Open the modified `Firebase_Admin_Panel.html`** in a web browser. Your admin panel is now ready.
+5.  **Open the modified `Firebase_Admin_Panel.html`** in a web browser. Your admin panel is now ready and will automatically use the Firebase URL you provided in the JavaScript.
 6.  From this panel, you can configure various aspects of the update dialog, including:
     *   Displaying/hiding the dialog.
     *   Setting the update message text.
@@ -63,7 +61,7 @@ Follow these steps to successfully integrate the online update dialog into your 
     *   Search for the `onCreate` method, typically defined as: `.method public onCreate(Landroid/os/Bundle;)V`
     *   Paste the following line of Smali code immediately after the `super.onCreate()` call:
         ```smali
-        invoke-static {p0}, Lcom/android/mf/ã…¤;->showUpdateDialog(Landroid/app/Activity;)V
+        invoke-static {p0}, Lcom/android/mf/ㅤ;->showUpdateDialog(Landroid/app/Activity;)V
         ```
 
 ---
@@ -80,4 +78,4 @@ For support or inquiries, please contact the project maintainer.
 
 ---
 
-*Created by JuTt*
+*Created by JuTt XH*
