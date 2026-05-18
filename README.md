@@ -78,4 +78,4 @@ Join our Telegram for more professional tools and updates:
 
 ---
 
-*Created by JuTt XH*
+*Created by JuTtXH*

@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MF — Dialog Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #cc0000;
+    --red-dark: #8b0000;
+    --red-deep: #3a0000;
+    --black: #000000;
+    --surface: #0f0000;
+    --surface2: #1a0000;
+    --surface3: #220000;
+    --border: #3a0000;
+    --border-bright: #cc0000;
+    --text: #ffffff;
+    --text-muted: #ffaaaa;
+    --text-dim: #ff6666;
+    --success: #00cc66;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(204,0,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(204,0,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow top */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(204,0,0,0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Header */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--red);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(204,0,0,0.4);
+  }
+
+  .logo-text {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text span {
+    color: var(--red);
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 2s infinite;
+  }
+
+  .status-dot.offline { background: #666; box-shadow: none; animation: none; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Main layout */
+  .main {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+  }
+
+  /* Firebase config section */
+  .config-section {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: rgba(204,0,0,0.4); }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Form elements */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+
+  input[type="text"],
+  input[type="url"],
+  textarea {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: none;
+  }
+
+  input[type="text"]:focus,
+  input[type="url"]:focus,
+  textarea:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(204,0,0,0.1);
+  }
+
+  textarea { min-height: 80px; line-height: 1.6; }
+
+  /* Toggle switch */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .toggle-info h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .toggle-info p {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+  }
+
+  .toggle {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: #666;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  .toggle input:checked + .toggle-slider {
+    background: rgba(204,0,0,0.2);
+    border-color: var(--red);
+  }
+
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+    background: var(--red);
+    box-shadow: 0 0 10px rgba(204,0,0,0.6);
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--red);
+    color: white;
+    width: 100%;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(204,0,0,0.3);
+  }
+
+  .btn-primary:hover {
+    background: #ee0000;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 25px rgba(204,0,0,0.5);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--red);
+    color: var(--text);
+  }
+
+  .btn-danger {
+    background: rgba(204,0,0,0.1);
+    color: var(--red);
+    border: 1px solid rgba(204,0,0,0.3);
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .btn-danger:hover {
+    background: rgba(204,0,0,0.2);
+  }
+
+  /* Preview panel */
+  .preview-panel {
+    position: sticky;
+    top: 24px;
+  }
+
+  .preview-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Made By @Matric_F4il */
+  .phone-mock {
+    background: #0a0a0a;
+    border-radius: 24px;
+    padding: 18px 14px;
+    border: 1px solid #1a1a1a;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+  }
+
+  .dialog-preview {
+    background: linear-gradient(170deg, #a00000 0%, #4a0000 40%, #1a0000 70%, #000000 100%);
+    border-radius: 22px;
+    padding: 22px 16px 16px;
+    border: 1px solid rgba(180,0,0,0.25);
+    overflow: hidden;
+  }
+
+  /* Cloud circle */
+  .preview-circle {
+    width: 76px;
+    height: 76px;
+    background: transparent;
+    border: 2.5px solid #cc0000;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    position: relative;
+  }
+
+  /* SVG cloud icon inside circle */
+  .preview-circle svg {
+    width: 38px;
+    height: 38px;
+    fill: white;
+  }
+
+  .preview-title {
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-family: var(--sans);
+    letter-spacing: -0.5px;
+  }
+
+  .preview-subtitle {
+    font-size: 12px;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 18px;
+    line-height: 1.6;
+    font-family: var(--sans);
+    font-weight: 400;
+    opacity: 0.85;
+  }
+
+  /* What's New box */
+  .preview-whatsnew {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(180,0,0,0.35);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .preview-wn-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .preview-gear {
+    width: 28px;
+    height: 28px;
+    background: #3a0000;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .preview-gear svg { width: 15px; height: 15px; fill: white; }
+
+  .preview-wn-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: var(--sans);
+  }
+
+  .preview-wn-text {
+    font-size: 12px;
+    color: #ffffff;
+    opacity: 0.9;
+    line-height: 1.75;
+    font-family: var(--sans);
+    white-space: pre-line;
+  }
+
+  /* Version row */
+  .preview-divider { display: none; }
+
+  .preview-version-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+
+  .preview-ver-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #2a0000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .preview-ver-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-ver-text { flex: 1; }
+
+  .preview-ver-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: var(--sans);
+  }
+
+  .preview-ver-num {
+    font-size: 11px;
+    color: #ffffff;
+    opacity: 0.7;
+    font-family: var(--sans);
+    margin-top: 1px;
+  }
+
+  .preview-size-badge {
+    background: #6B0000;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    font-family: var(--sans);
+  }
+
+  /* Buttons */
+  .preview-btns {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .preview-exit-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #cc0000;
+    border-radius: 30px;
+    background: transparent;
+    color: #ff4444;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    font-family: var(--sans);
+  }
+
+  .preview-update-btn {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, #ee0000, #aa0000);
+    border-radius: 30px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    font-family: var(--sans);
+    box-shadow: 0 4px 16px rgba(204,0,0,0.5);
+  }
+
+  /* Security bar */
+  .preview-security {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(100,0,0,0.5);
+    border-radius: 10px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #ffffff;
+    opacity: 0.85;
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+
+  /* Notification */
+  .notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--surface2);
+    border: 1px solid var(--success);
+    border-radius: 12px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--success);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,204,102,0.1);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100;
+  }
+
+  .notification.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .notification.error {
+    border-color: var(--red);
+    color: var(--red);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(204,0,0,0.1);
+  }
+
+  /* Firebase config input */
+  .firebase-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .firebase-inputs .full {
+    grid-column: 1 / -1;
+  }
+
+  /* Loading */
+  .loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Status badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+
+  .badge-on {
+    background: rgba(0,204,102,0.15);
+    color: var(--success);
+    border: 1px solid rgba(0,204,102,0.3);
+  }
+
+  .badge-off {
+    background: rgba(102,102,102,0.15);
+    color: #666;
+    border: 1px solid rgba(102,102,102,0.3);
+  }
+
+  /* App IDs counter badge */
+  .apps-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(204,0,0,0.12);
+    border: 1px solid rgba(204,0,0,0.25);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--red);
+    margin-top: 6px;
+    transition: all 0.2s;
+  }
+
+  /* Better card glow on focus-within */
+  .card:focus-within {
+    border-color: rgba(204,0,0,0.5);
+    box-shadow: 0 0 0 1px rgba(204,0,0,0.1);
+  }
+
+  /* Scrollbar styling */
+  textarea::-webkit-scrollbar { width: 4px; }
+  textarea::-webkit-scrollbar-track { background: transparent; }
+  textarea::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  textarea::-webkit-scrollbar-thumb:hover { background: var(--red-dark); }
+
+  /* Improved section label */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Tooltip hint */
+  .hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  /* Apps preview chip area */
+  .apps-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .app-chip {
+    background: rgba(204,0,0,0.08);
+    border: 1px solid rgba(204,0,0,0.2);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; }
+    header { padding: 16px 20px; }
+    .firebase-inputs { grid-template-columns: 1fr; }
+    .preview-panel { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">☣️</div>
+    <div class="logo-text">MF<span>Admin</span></div>
+  </div>
+  <div class="header-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Disconnected</span>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Left: Controls -->
+  <div class="left-panel">
+
+    <!-- Dialog Toggle -->
+    <div class="card">
+      <div class="section-label">⚡ Dialog Control</div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h3>Show Dialog</h3>
+          <p>Enable or disable dialog for users</p>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="showDialog" onchange="updatePreview()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>APP PACKAGE IDs <span style="color:var(--text-dim);font-size:10px;">(one package per line)</span></label>
+        <textarea id="appIds" placeholder="com.my.newproject199&#10;com.my.otherapp&#10;com.jutt.myapp" style="min-height:90px;font-size:12px;line-height:1.7;" oninput="updatePreview()"></textarea>
+        <div style="margin-top:5px;font-size:10px;color:var(--text-dim);font-family:var(--mono);">💡 Multiple apps support — Leave this blank to display dialog in all apps.</div>
+      </div>
+    </div>
+
+    <!-- Dialog Content -->
+    <div class="card">
+      <div class="section-label">✏️ Dialog Content</div>
+
+      <div class="form-group">
+        <label>TITLE</label>
+        <input type="text" id="title" value="Update Available" oninput="updatePreview()" />
+      </div>
+
+      <div class="form-group">
+        <label>SUBTITLE</label>
+        <textarea id="subtitle" oninput="updatePreview()">A new version of the app is available.
+Please update to continue.</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>WHAT'S NEW</label>
+        <textarea id="whatsnew" oninput="updatePreview()">• Bug fixes and performance improvements
+• Enhanced user experience
+• New features and improvements</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>BUTTON TEXT</label>
+        <input type="text" id="btnUpdate" value="Update Now" oninput="updatePreview()" />
+      </div>
+
+      <div class="form-group">
+        <label>UPDATE LINK</label>
+        <input type="url" id="link" placeholder="https://play.google.com/..." oninput="updatePreview()" />
+      </div>
+    </div>
+
+    <!-- Version Info -->
+    <div class="card">
+      <div class="section-label">📦 Version Info</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>VERSION</label>
+          <input type="text" id="version" value="v 1.0" oninput="updatePreview()" />
+        </div>
+        <div class="form-group">
+          <label>SIZE</label>
+          <input type="text" id="size" value="25.6 MB" oninput="updatePreview()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <button class="btn btn-primary" id="saveBtn" onclick="saveToFirebase()" style="font-size:16px;padding:16px;">
+      <span>🚀</span> Push to Firebase
+    </button>
+    <button class="btn btn-danger" onclick="disableDialog()">
+      <span>🔴</span> Disable Dialog Now
+    </button>
+
+  </div>
+
+  <!-- Right: Preview -->
+  <div class="preview-panel">
+    <div class="preview-label">👁 Live Preview</div>
+
+    <div class="phone-mock">
+      <div class="dialog-preview">
+
+        <!-- Cloud circle -->
+        <div class="preview-circle">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+          </svg>
+        </div>
+
+        <div class="preview-title" id="prev-title">Update Available</div>
+        <div class="preview-subtitle" id="prev-subtitle">A new version of the app is available.
+Please update to continue.</div>
+
+        <!-- What's New -->
+        <div class="preview-whatsnew">
+          <div class="preview-wn-header">
+            <div class="preview-gear">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+              </svg>
+            </div>
+            <div class="preview-wn-title">What's New</div>
+          </div>
+          <div class="preview-wn-text" id="prev-whatsnew">• Bug fixes and performance improvements
+• Enhanced user experience
+• New features and improvements</div>
+        </div>
+
+        <div class="preview-divider"></div>
+
+        <!-- Version row -->
+        <div class="preview-version-row">
+          <div class="preview-ver-icon">
+            <img src="https://i.ibb.co/gMV1dBMf/img2.png" alt="App Icon" />
+          </div>
+          <div class="preview-ver-text">
+            <div class="preview-ver-label">Version</div>
+            <div class="preview-ver-num" id="prev-version">v 1.0</div>
+          </div>
+          <div class="preview-size-badge" id="prev-size">25.6 MB</div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="preview-btns">
+          <div class="preview-exit-btn">Exit</div>
+          <div class="preview-update-btn" id="prev-btn">Update Now</div>
+        </div>
+
+        <!-- Security bar -->
+        <div class="preview-security">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#cc9999;flex-shrink:0;">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+          For a better &amp; secure experience, please keep the app updated.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Status card -->
+    <div class="card" style="margin-top:16px;">
+      <div class="section-label">📊 Current Status</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:var(--text-muted);font-family:var(--mono);">Dialog</span>
+          <span class="badge badge-off" id="dialogBadge">● OFF</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:var(--text-muted);font-family:var(--mono);">Firebase</span>
+          <span class="badge badge-off" id="firebaseBadge">● Disconnected</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:var(--text-muted);font-family:var(--mono);">Last Push</span>
+          <span style="font-size:11px;color:var(--text-dim);font-family:var(--mono);" id="lastPush">Not Available</span>
+        </div>
+        <div id="appsChipArea" style="display:none;margin-top:4px;">
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-bottom:5px;">TARGET APPS:</div>
+          <div class="apps-chips" id="appsChips"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification -->
+<div class="notification" id="notification">
+  <span id="notifIcon">✓</span>
+  <span id="notifText">Saved successfully!</span>
+</div>
+
+<script>
+
+  // ============================================================
+  // 🔗 PASTE YOUR FIREBASE REALTIME DATABASE URL HERE (only once)
+  // Example: https://your-project-default-rtdb.firebaseio.com
+  // Made By @Matric_F4il
+  // ================================================👇👇👇👇===========
+  let firebaseUrl = 'paste here';
+
+
+
+  let nodePath = 'update_dialog';
+  let isConnected = false;
+
+  function updatePreview() {
+    document.getElementById('prev-title').textContent = document.getElementById('title').value || 'Update Available';
+    document.getElementById('prev-subtitle').textContent = document.getElementById('subtitle').value;
+    document.getElementById('prev-whatsnew').textContent = document.getElementById('whatsnew').value;
+    document.getElementById('prev-btn').textContent = document.getElementById('btnUpdate').value || 'Update Now';
+    document.getElementById('prev-version').textContent = document.getElementById('version').value || 'v 1.0';
+    document.getElementById('prev-size').textContent = document.getElementById('size').value || '0 MB';
+
+    const isOn = document.getElementById('showDialog').checked;
+    document.getElementById('dialogBadge').className = isOn ? 'badge badge-on' : 'badge badge-off';
+    document.getElementById('dialogBadge').textContent = isOn ? '● ON' : '● OFF';
+
+    // Apps chips update
+    const appsRaw = document.getElementById('appIds').value;
+    const appsList = appsRaw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    const chipsArea = document.getElementById('appsChipArea');
+    const chipsContainer = document.getElementById('appsChips');
+
+    if (appsList.length > 0) {
+      chipsArea.style.display = 'block';
+      chipsContainer.innerHTML = appsList.map(a =>
+        `<div class="app-chip" title="${a}">${a}</div>`
+      ).join('');
+    } else {
+      chipsArea.style.display = 'none';
+      chipsContainer.innerHTML = '';
+    }
+  }
+
+  // Connect Firebase
+  function connectFirebase() {
+    const url = document.getElementById('dbUrl').value.trim();
+    nodePath = document.getElementById('nodePath').value.trim() || 'update_dialog';
+
+    if (!url) {
+      showNotif('Please enter Firebase Database URL!', true);
+      return;
+    }
+
+    firebaseUrl = url.replace(/\/$/, '');
+    isConnected = true;
+
+    document.getElementById('statusDot').className = 'status-dot';
+    document.getElementById('statusText').textContent = 'Connected';
+    document.getElementById('firebaseBadge').className = 'badge badge-on';
+    document.getElementById('firebaseBadge').textContent = '● Connected';
+
+    showNotif('Firebase connected successfully!');
+    loadData();
+  }
+
+  // Load data from Firebase
+  async function loadData() {
+    if (!isConnected) {
+      showNotif('Connect to Firebase first!', true);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${firebaseUrl}/${nodePath}.json`);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+
+      if (data) {
+        document.getElementById('showDialog').checked = data.show_dialog || false;
+        document.getElementById('appIds').value =
+          Array.isArray(data.apps) ? data.apps.join('\n') : (data.app_id ? data.app_id : '');
+        document.getElementById('title').value = data.title || '';
+        document.getElementById('subtitle').value = data.subtitle || '';
+        document.getElementById('whatsnew').value = data.whatsnew || '';
+        document.getElementById('btnUpdate').value = data.btn_update || 'Update Now';
+        document.getElementById('link').value = data.link || '';
+        document.getElementById('version').value = data.version || 'v 1.0';
+        document.getElementById('size').value = data.size || '0 MB';
+        updatePreview();
+        showNotif('Data loaded from Firebase!');
+      } else {
+        showNotif('No data found. Push new data!', true);
+      }
+    } catch (e) {
+      showNotif('Failed to load data!', true);
+    }
+  }
+
+  // Save to Firebase
+  async function saveToFirebase() {
+    if (!isConnected) {
+      showNotif('Connect to Firebase first!', true);
+      return;
+    }
+
+    const btn = document.getElementById('saveBtn');
+    btn.innerHTML = '<span class="loading"></span> Pushing...';
+    btn.disabled = true;
+
+    const data = {
+      show_dialog: document.getElementById('showDialog').checked,
+      apps: document.getElementById('appIds').value
+        .split('\n')
+        .map(s => s.trim())
+        .filter(s => s.length > 0),
+      title: document.getElementById('title').value.trim(),
+      subtitle: document.getElementById('subtitle').value.trim(),
+      whatsnew: document.getElementById('whatsnew').value.trim(),
+      btn_update: document.getElementById('btnUpdate').value.trim(),
+      link: document.getElementById('link').value.trim(),
+      version: document.getElementById('version').value.trim(),
+      size: document.getElementById('size').value.trim()
+    };
+
+    try {
+      const res = await fetch(`${firebaseUrl}/${nodePath}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) throw new Error('Failed');
+
+      const now = new Date();
+      document.getElementById('lastPush').textContent =
+        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      showNotif('🚀 Pushed to Firebase successfully!');
+    } catch (e) {
+      showNotif('Failed to push data!', true);
+    }
+
+    btn.innerHTML = '<span>🚀</span> Push to Firebase';
+    btn.disabled = false;
+  }
+
+  // Quick disable
+  async function disableDialog() {
+    if (!isConnected) {
+      showNotif('Connect to Firebase first!', true);
+      return;
+    }
+
+    try {
+      await fetch(`${firebaseUrl}/${nodePath}/show_dialog.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(false)
+      });
+
+      document.getElementById('showDialog').checked = false;
+      updatePreview();
+      showNotif('Dialog disabled instantly!');
+    } catch (e) {
+      showNotif('Failed!', true);
+    }
+  }
+
+  // Show notification
+  function showNotif(msg, isError = false) {
+    const notif = document.getElementById('notification');
+    const icon = document.getElementById('notifIcon');
+    const text = document.getElementById('notifText');
+
+    notif.className = 'notification' + (isError ? ' error' : '');
+    icon.textContent = isError ? '✕' : '✓';
+    text.textContent = msg;
+
+    notif.classList.add('show');
+    setTimeout(() => notif.classList.remove('show'), 3000);
+  }
+
+  // Initialize on page load — uses the Firebase URL set above
+  updatePreview();
+  isConnected = true;
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusText').textContent = 'Connected';
+  document.getElementById('firebaseBadge').className = 'badge badge-on';
+  document.getElementById('firebaseBadge').textContent = '● Connected';
+  loadData();
+
+  // Made By @Matric_F4il
+</script>
+</body>
+</html>

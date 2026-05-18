@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>URL Encryptor</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --red:        #cc0000;
+    --red-bright: #ff2222;
+    --red-dark:   #7a0000;
+    --bg:         #050505;
+    --surface:    #0d0d0d;
+    --surface2:   #111111;
+    --border:     rgba(204,0,0,0.2);
+    --text:       #f0f0f0;
+    --text-dim:   #666;
+    --mono:       'Share Tech Mono', monospace;
+    --display:    'Bebas Neue', sans-serif;
+    --body:       'Rajdhani', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--body); min-height: 100vh; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(204,0,0,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(204,0,0,0.035) 1px, transparent 1px);
+    background-size: 44px 44px; pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+    pointer-events: none; z-index: 1;
+  }
+  .glow-top {
+    position: fixed; top: -150px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(160,0,0,0.15) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .wrapper { position: relative; z-index: 2; max-width: 720px; margin: 0 auto; padding: 0 20px 60px; }
+
+  header { padding: 50px 0 32px; text-align: center; animation: fadeDown 0.6s ease both; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(204,0,0,0.08); border: 1px solid var(--border);
+    border-radius: 3px; padding: 5px 16px;
+    font-family: var(--mono); font-size: 10px; color: var(--red);
+    letter-spacing: 3px; margin-bottom: 20px;
+  }
+  .badge-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--red); box-shadow: 0 0 6px var(--red); animation: pulse 1.4s infinite;
+  }
+  h1 {
+    font-family: var(--display); font-size: clamp(48px, 10vw, 88px);
+    letter-spacing: 5px; line-height: 0.92;
+    background: linear-gradient(160deg, #fff 20%, #ff5555 60%, #880000 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 14px;
+  }
+  .header-meta { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 2px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-bottom: 16px;
+    box-shadow: 0 2px 40px rgba(0,0,0,0.6); animation: fadeUp 0.6s ease both;
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  .card-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(204,0,0,0.15); border: 1px solid rgba(204,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 10px; color: var(--red); flex-shrink: 0;
+  }
+  .card-title { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+  .card-body { padding: 18px; }
+
+  input[type="url"] {
+    width: 100%; background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(204,0,0,0.15); border-radius: 8px;
+    color: var(--text); font-family: var(--mono); font-size: 13px;
+    padding: 12px 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus { border-color: rgba(204,0,0,0.45); box-shadow: 0 0 0 2px rgba(204,0,0,0.08); }
+  input::placeholder { color: #2e2e2e; }
+
+  /* Auto-append notice */
+  .append-notice {
+    display: none; margin-top: 10px; padding: 10px 13px;
+    background: rgba(204,0,0,0.06); border: 1px solid rgba(204,0,0,0.22);
+    border-radius: 7px; font-family: var(--mono); font-size: 11px;
+    color: var(--text-dim); line-height: 1.7;
+  }
+  .append-notice.show { display: block; }
+  .append-notice .an-tag { color: var(--red); font-size: 10px; letter-spacing: 1px; }
+  .append-notice .an-url { color: #ff7777; word-break: break-all; margin-top: 3px; }
+
+  /* Telegram promo card */
+  .tg-card {
+    background: var(--surface); border: 1px solid rgba(204,0,0,0.28);
+    border-radius: 14px; overflow: hidden; margin-bottom: 16px;
+    animation: fadeUp 0.6s 0.1s ease both; position: relative;
+  }
+  .tg-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+  }
+  .tg-inner { padding: 26px 22px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+  .tg-icon {
+    width: 60px; height: 60px; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(204,0,0,0.18), rgba(80,0,0,0.12));
+    border: 1px solid rgba(204,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; box-shadow: 0 0 24px rgba(204,0,0,0.12);
+  }
+  .tg-title { font-family: var(--display); font-size: 22px; letter-spacing: 4px; color: white; }
+  .tg-desc { font-family: var(--body); font-size: 14px; color: #888; line-height: 1.6; max-width: 460px; }
+  .tg-desc strong { color: #bbb; }
+  .tg-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, #cc0000, #880000);
+    border: none; border-radius: 10px; padding: 13px 30px;
+    color: white; font-family: var(--display); font-size: 18px; letter-spacing: 3px;
+    cursor: pointer; text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(204,0,0,0.3);
+  }
+  .tg-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(204,0,0,0.45); }
+  .tg-btn svg { width: 18px; height: 18px; fill: white; }
+  .tg-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, rgba(204,0,0,0.4), transparent); }
+  .tg-credit { font-family: var(--mono); font-size: 10px; color: #2a2a2a; letter-spacing: 2px; }
+  .tg-credit span { color: var(--red-dark); }
+
+  /* Encrypt button */
+  .btn-encrypt {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, #cc0000 0%, #880000 100%);
+    border: none; border-radius: 10px; color: white;
+    font-family: var(--display); font-size: 26px; letter-spacing: 5px;
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 6px 24px rgba(204,0,0,0.35);
+  }
+  .btn-encrypt::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .btn-encrypt:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(204,0,0,0.5); }
+  .btn-encrypt:hover::before { opacity: 1; }
+  .btn-encrypt:active { transform: translateY(0); }
+  .btn-encrypt.loading { pointer-events: none; background: linear-gradient(135deg, #881111, #550000); }
+
+  .output-box {
+    background: rgba(0,0,0,0.5); border: 1px solid rgba(204,0,0,0.12);
+    border-radius: 8px; padding: 14px; font-family: var(--mono); font-size: 12px;
+    color: #ff7777; word-break: break-all; line-height: 1.8; min-height: 60px;
+    transition: border-color 0.3s;
+  }
+  .output-box.active { border-color: rgba(204,0,0,0.4); }
+  .output-placeholder { color: #222; font-style: italic; font-size: 11px; }
+
+  .instructions {
+    background: var(--surface); border: 1px solid rgba(204,0,0,0.18);
+    border-radius: 14px; overflow: hidden; margin-bottom: 16px;
+    display: none; animation: fadeUp 0.4s ease both;
+  }
+  .instructions.visible { display: block; }
+  .inst-head {
+    background: linear-gradient(135deg, rgba(204,0,0,0.15), rgba(100,0,0,0.08));
+    border-bottom: 1px solid rgba(204,0,0,0.2);
+    padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .inst-title { font-family: var(--display); font-size: 20px; letter-spacing: 3px; color: white; }
+  .inst-body { padding: 20px; }
+  .step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(204,0,0,0.15); border: 1px solid rgba(204,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; color: var(--red);
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .step-text { font-family: var(--body); font-size: 15px; color: #ccc; line-height: 1.55; }
+  .step-text strong { color: white; }
+  .step-text code {
+    background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.2);
+    border-radius: 4px; padding: 1px 7px;
+    font-family: var(--mono); font-size: 12px; color: #ff8888;
+  }
+  .path-display {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(204,0,0,0.2);
+    border-radius: 5px; padding: 4px 12px;
+    font-family: var(--mono); font-size: 12px; color: #aaa; margin-top: 6px;
+  }
+  .path-display .sep { color: var(--red); }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(204,0,0,0.2), transparent); margin: 4px 0 16px; }
+  .btn-download {
+    width: 100%; padding: 14px; background: transparent;
+    border: 1.5px solid var(--red); border-radius: 10px;
+    color: var(--red-bright); font-family: var(--display); font-size: 22px; letter-spacing: 4px;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-download:hover { background: rgba(204,0,0,0.1); box-shadow: 0 0 20px rgba(204,0,0,0.2); transform: translateY(-1px); }
+  .btn-download svg { width: 18px; height: 18px; fill: var(--red-bright); }
+  .success-bar {
+    display: none; align-items: center; gap: 10px;
+    background: rgba(0,80,0,0.15); border: 1px solid rgba(0,180,0,0.25);
+    border-radius: 8px; padding: 10px 14px; margin-top: 14px;
+    font-family: var(--mono); font-size: 11px; color: #44ff88; letter-spacing: 1px;
+  }
+  .success-bar.show { display: flex; }
+  .success-dot { width: 6px; height: 6px; border-radius: 50%; background: #44ff88; animation: pulse 1s infinite; }
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: #111; border: 1px solid var(--red); border-radius: 8px;
+    padding: 10px 22px; font-family: var(--mono); font-size: 12px;
+    color: var(--red); letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(204,0,0,0.25);
+    opacity: 0; transition: all 0.3s; z-index: 999; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  footer { text-align: center; font-family: var(--mono); font-size: 10px; color: #1e1e1e; letter-spacing: 2px; padding-top: 10px; }
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2); border-top-color: white;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)}  to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes spin     { to{transform:rotate(360deg)} }
+  @media(max-width:540px){ h1{font-size:52px} .btn-encrypt{font-size:20px} .tg-title{font-size:18px} }
+</style>
+</head>
+<body>
+<div class="glow-top"></div>
+<div class="wrapper">
+
+  <header>
+    <div class="badge"><div class="badge-dot"></div>URL ENCRYPTOR TOOL</div>
+    <h1>MF &nbsp;ENCRYPTOR</h1>
+    <p class="header-meta">SECURE FILE GENERATOR &nbsp;·&nbsp; ASSETS BUILDER</p>
+  </header>
+
+  <!-- Step 1 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num">1</div>
+      <div class="card-title">Enter Firebase DATABASE URL</div>
+    </div>
+    <div class="card-body">
+      <input type="url" id="urlInput"
+        placeholder="https://your-project-default-rtdb.firebaseio.com"
+        oninput="onUrlChange()" />
+      <div class="append-notice" id="appendNotice">
+        <span class="an-tag">⚡ AUTO-FIXED —</span> <code>/update_dialog.json</code> was missing, so it was added automatically.<br>
+        <div class="an-url" id="finalUrlDisplay"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Telegram promo -->
+  <div class="tg-card">
+    <div class="tg-inner">
+      <div class="tg-icon">📢</div>
+      <div class="tg-title">SUPPORT &amp; UPDATES</div>
+      <div class="tg-desc">
+        Join our Telegram for <strong>more Professional tools</strong>,
+        updates, and exclusive resources for Android developers.
+      </div>
+      <a class="tg-btn" href="https://t.me/Matric_F4il" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        JOIN @Matric_F4il
+      </a>
+      <div class="tg-line"></div>
+      <div class="tg-credit">CREATED WITH ❤ BY <span>MATRIC F4IL</span></div>
+    </div>
+  </div>
+
+  <!-- Step 2: Encrypt -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-num">2</div>
+      <div class="card-title">Encrypt &amp; Generate File</div>
+    </div>
+    <div class="card-body">
+      <div style="margin-bottom:14px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:8px;">ENCRYPTED HEX OUTPUT</div>
+        <div class="output-box" id="outputBox">
+          <span class="output-placeholder">Encrypted hex will appear here after you click Encrypt...</span>
+        </div>
+      </div>
+      <button class="btn-encrypt" id="encBtn" onclick="doEncrypt()">
+        ENCRYPT &amp; DOWNLOAD
+      </button>
+      <div class="success-bar" id="successBar">
+        <div class="success-dot"></div>
+        File downloaded — follow instructions below ↓
+      </div>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div class="instructions" id="instructions">
+    <div class="inst-head">
+      <div>📋</div>
+      <div class="inst-title">NEXT STEPS</div>
+    </div>
+    <div class="inst-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Your file has been <strong>downloaded automatically</strong> to your <strong>Downloads</strong> folder. Filename is <strong>invisible</strong> (4 blank chars) with <strong>no extension</strong>.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Open <strong>Downloads</strong> folder — "The file name will appear blank/invisible."</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <strong>Cut</strong> it and paste it into the project's <code>assets</code> folder:<br>
+          <div class="path-display">
+            <span>Dialog</span><span class="sep">/</span><span>assets</span><span class="sep">/</span><span style="color:var(--red);">ㅤㅤㅤㅤ</span><span style="color:#333;font-size:10px;">&nbsp;← paste here</span>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text"><strong>Done!</strong> Your code will read the file at runtime, decrypt it, and use the URL.</div>
+      </div>
+      <div class="divider"></div>
+      <button class="btn-download" onclick="reDownload()">
+        <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
+        DOWNLOAD AGAIN
+      </button>
+    </div>
+  </div>
+
+  <footer>MF CIPHER TOOL &nbsp;·&nbsp; ASSETS FILE GENERATOR</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = '@Matric_F4il';
+const SUFFIX = '/update_dialog.json';
+const INVISIBLE_NAME = '\u3164\u3164\u3164\u3164'; // 4 invisible chars, no extension
+let lastEncrypted = null;
+
+function getFinalUrl() {
+  let v = document.getElementById('urlInput').value.trim();
+  if (!v) return '';
+  v = v.replace(/\/+$/, ''); // trailing slash hata
+  if (!v.endsWith(SUFFIX)) v += SUFFIX;
+  return v;
+}
+
+function onUrlChange() {
+  const raw = document.getElementById('urlInput').value.trim();
+  const notice = document.getElementById('appendNotice');
+  const box = document.getElementById('outputBox');
+  box.innerHTML = '<span class="output-placeholder">Encrypted hex will appear here after you click Encrypt...</span>';
+  box.classList.remove('active');
+  document.getElementById('successBar').classList.remove('show');
+  document.getElementById('instructions').classList.remove('visible');
+  lastEncrypted = null;
+
+  if (raw.length > 0) {
+    const clean = raw.replace(/\/+$/, '');
+    if (!clean.endsWith(SUFFIX)) {
+      document.getElementById('finalUrlDisplay').textContent = getFinalUrl();
+      notice.classList.add('show');
+    } else {
+      notice.classList.remove('show');
+    }
+  } else {
+    notice.classList.remove('show');
+  }
+}
+
+function xorEncrypt(text) {
+  const out = [];
+  for (let i = 0; i < text.length; i++)
+    out.push((text.charCodeAt(i) ^ KEY.charCodeAt(i % KEY.length)) & 0xFF);
+  return out;
+}
+
+function toHex(bytes) {
+  return bytes.map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function downloadFile(content) {
+  const blob = new Blob([content], { type: 'application/octet-stream' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = INVISIBLE_NAME;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function doEncrypt() {
+  const raw = document.getElementById('urlInput').value.trim();
+  if (!raw) { showToast('⚠ Please enter a URL first'); return; }
+
+  const finalUrl = getFinalUrl();
+  const btn = document.getElementById('encBtn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span> ENCRYPTING...';
+
+  setTimeout(() => {
+    try {
+      const hexStr = toHex(xorEncrypt(finalUrl));
+      lastEncrypted = hexStr;
+      const box = document.getElementById('outputBox');
+      box.textContent = hexStr;
+      box.classList.add('active');
+      downloadFile(hexStr);
+      document.getElementById('successBar').classList.add('show');
+      document.getElementById('instructions').classList.add('visible');
+      setTimeout(() => document.getElementById('instructions').scrollIntoView({ behavior:'smooth', block:'start' }), 300);
+    } catch(e) { showToast('✕ Error: ' + e.message); }
+
+    btn.classList.remove('loading');
+    btn.innerHTML = '✓ &nbsp;ENCRYPTED &amp; DOWNLOADED';
+    btn.style.background = 'linear-gradient(135deg,#006600,#004400)';
+    btn.style.boxShadow  = '0 6px 24px rgba(0,150,0,0.25)';
+    setTimeout(() => {
+      btn.innerHTML = 'ENCRYPT &amp; DOWNLOAD';
+      btn.style.background = ''; btn.style.boxShadow = '';
+    }, 3000);
+  }, 350);
+}
+
+function reDownload() {
+  if (!lastEncrypted) { showToast('⚠ Encrypt a URL first'); return; }
+  downloadFile(lastEncrypted);
+  showToast('✓ File downloaded again');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doEncrypt();
+});
+</script>
+</body>
+</html>
