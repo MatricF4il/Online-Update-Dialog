@@ -27,14 +27,14 @@ Follow these steps to successfully integrate the online update dialog into your 
 2.  **Place `classes_.dex`:** Inject the `classes_.dex` file into your decompiled APK. If using MT Manager, add it as a new DEX file (e.g., `classes2.dex` or `classes3.dex`).
 3.  **Add Assets:**
     *   Copy the two image files (with invisible names) into the `assets/` folder of your decompiled APK.
-    *   Create a new file with four invisible characters as its name (e.g., `ㅤㅤㅤㅤ`) inside the `assets/` folder. This file will store your encrypted Firebase URL.
+    *   Create a new file with four invisible characters as its name (e.g., `ã…¤ã…¤ã…¤ã…¤`) inside the `assets/` folder. This file will store your encrypted Firebase URL.
 
 ### Step 2: Firebase URL Encryption
 
 1.  **Open `URL_Encrypter.html`** in a web browser.
 2.  **Enter your Firebase Realtime Database URL** into the provided input field.
 3.  The tool will automatically encrypt the URL and provide the encrypted content. Copy this **Encrypted Asset Content**.
-4.  **Paste the copied content** into the `assets/ㅤㅤㅤㅤ` file (the one with four invisible characters) created in Step 1.
+4.  **Paste the copied content** into the `assets/ã…¤ã…¤ã…¤ã…¤` file (the one with four invisible characters) created in Step 1.
 
 ### Step 3: Firebase Admin Panel Configuration
 
@@ -63,7 +63,7 @@ Follow these steps to successfully integrate the online update dialog into your 
     *   Search for the `onCreate` method, typically defined as: `.method public onCreate(Landroid/os/Bundle;)V`
     *   Paste the following line of Smali code immediately after the `super.onCreate()` call:
         ```smali
-        invoke-static {p0}, Lcom/android/mf/ㅤ;->showUpdateDialog(Landroid/app/Activity;)V
+        invoke-static {p0}, Lcom/android/mf/ã…¤;->showUpdateDialog(Landroid/app/Activity;)V
         ```
 
 ---
@@ -80,102 +80,4 @@ For support or inquiries, please contact the project maintainer.
 
 ---
 
-*Created by Manus AI*
-body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; padding:0; }
-header { background:#2c3e50; color:white; padding:20px; text-align:center; }
-h1 { margin:0; font-size:24px; }
-main { max-width:800px; margin:30px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-label { display:block; margin:15px 0 5px; font-weight:bold;}
-input, textarea { width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:5px; }
-button { padding:10px 20px; border:none; border-radius:5px; background:#2980b9; color:white; font-size:16px; cursor:pointer; }
-button:hover { background:#3498db; }
-pre { background:#eee; padding:10px; border-radius:5px; overflow-x:auto; }
-.section { margin-top:30px; }
-</style>
-</head>
-<body>
-
-<header>
-<h1>Online Update Dialog — Admin Panel (Educational)</h1>
-</header>
-
-<main>
-<div class="section">
-<h2>Step 1: Encrypt Firebase URL</h2>
-<label for="firebaseUrl">Enter your Firebase Realtime DB URL:</label>
-<input type="text" id="firebaseUrl" placeholder="https://your-app.firebaseio.com/">
-<button onclick="encryptUrl()">Encrypt URL</button>
-
-<label for="encryptedOutput">Encrypted Output (copy to assets/ㅤㅤㅤㅤ):</label>
-<pre id="encryptedOutput"></pre>
-</div>
-
-<div class="section">
-<h2>Step 2: Configure Update Dialog</h2>
-<label for="updateTitle">Update Title:</label>
-<input type="text" id="updateTitle" placeholder="Version 1.1 Available!">
-
-<label for="updateSubtitle">Update Subtitle:</label>
-<input type="text" id="updateSubtitle" placeholder="New features & bug fixes">
-
-<label for="whatsNew">What's New:</label>
-<textarea id="whatsNew" rows="4" placeholder="Enter new features or changes"></textarea>
-
-<label for="versionNumber">Version Number:</label>
-<input type="text" id="versionNumber" placeholder="1.1">
-
-<label for="fileSize">File Size (MB):</label>
-<input type="text" id="fileSize" placeholder="25">
-
-<label for="downloadLink">Download Link:</label>
-<input type="text" id="downloadLink" placeholder="https://example.com/app.apk">
-
-<button onclick="generateFirebasePayload()">Generate Firebase Payload</button>
-
-<label for="firebasePayload">Firebase JSON Payload (copy to Firebase DB for testing):</label>
-<pre id="firebasePayload"></pre>
-</div>
-
-</main>
-
-<script>
-// Simple XOR-based encryption for educational purposes
-function encryptUrl() {
-    let url = document.getElementById('firebaseUrl').value;
-    if(!url) return alert("Enter a Firebase URL first!");
-    let key = 129; // simple key
-    let encrypted = "";
-    for(let i=0;i<url.length;i++){
-        encrypted += String.fromCharCode(url.charCodeAt(i) ^ key);
-    }
-    document.getElementById('encryptedOutput').textContent = encrypted;
-}
-
-// Generate Firebase JSON payload
-function generateFirebasePayload(){
-    let payload = {
-        title: document.getElementById('updateTitle').value || "",
-        subtitle: document.getElementById('updateSubtitle').value || "",
-        whatsNew: document.getElementById('whatsNew').value || "",
-        version: document.getElementById('versionNumber').value || "",
-        fileSize: document.getElementById('fileSize').value || "",
-        downloadLink: document.getElementById('downloadLink').value || ""
-    };
-    document.getElementById('firebasePayload').textContent = JSON.stringify(payload, null, 4);
-}
-</script>
-
-</body>
-</html>
-## 📌 Overview
-
-This repository demonstrates a **safe, educational implementation of an online update dialog** for Android apps.  
-
-> ⚠️ Important: This is strictly for **educational purposes, testing, and learning only**. Do **not** use on apps you do not own.  
-
-The project allows you to:
-- Display a **custom update dialog** in your app.
-- Manage update content in **real-time via Firebase Realtime Database**.
-- Encrypt and safely store Firebase URLs in assets.
-
----
+*Created by JuTt*
