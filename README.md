@@ -1,4 +1,4 @@
-# Online Update Dialog Injection Guide
+# Online Update Dialog V1 Injection Guide
 
 **For Educational & Testing Purposes Only.**
 
@@ -74,7 +74,8 @@ Once integrated, your application will automatically check for updates and displ
 
 ## 📢 Support & Updates
 Join our Telegram for more professional tools and updates:
-👉 [**Telegram: @Matric_F4il**](https://t.me/Matric_F4il)
+
+ [**Telegram: @Matric_F4il**](https://t.me/Matric_F4il)
 
 ---
 
